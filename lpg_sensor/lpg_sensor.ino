@@ -51,7 +51,7 @@ float rh65[4] = { 1.21, 1.0, 0.92, 0.82 } ; // computed from 33 & 85
 float rh85[4] = { 1.13, 0.94, 0.87, 0.77 } ;
 float rh65_20 = 0.92 ; // correction factor for 20C and 65% RH
 
-float ref_resistance = 22.0 ; // in kOhms
+float ref_resistance = 33.0 ; // in kOhms
 float Ro ;
 
 // linear fit with for the LPG concentration with x=log10(lpg_ppm)
@@ -407,7 +407,7 @@ void init_mq6()
 	Serial.println( "MQ6 calibrated" ) ;
 }
 
-// correct th ratio (or just the measured resistance) for the measured
+// correct the ratio (or just the measured resistance) for the measured
 // temperature and relative humidity
 float t_rh_correct( float ratio, int temp, int rh )
 {
