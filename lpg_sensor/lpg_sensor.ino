@@ -40,7 +40,7 @@
 #include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
 
 #define DHT20_addr 0x38
-#define MQ6_PIN 6
+#define MQ6_PIN A6
 #define MQ6_WARMUP_SECS 30
 #define MQ6_CLEAN_AIR_RATIO 10.0 
 
