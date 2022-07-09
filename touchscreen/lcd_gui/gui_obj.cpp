@@ -299,15 +299,11 @@ void editval::edit()
 	cancel = pgm_read_word_near( &(lpbuff->cancel) ) ;
 	_action = (int (*)( void *obj, void *aa))
 			pgm_read_word_near( &(lpbuff->_action)) ;
-#if 1
 	if ( n_dec == 0 ) {
 		String( *value ).toCharArray(editbuff,15) ;
 	} else {
 		String( *((float *)value), n_dec ).toCharArray(editbuff,15) ;
 	}
-#else
-	strcpy( editbuff, vartxt ) ;
-#endif
 	if ( !am_signed )
 		numvals[9] = ' ' ;
 	// set up for edit screen
