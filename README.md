@@ -4,4 +4,4 @@ Files for various projects that need to be publicly accessible. This is mostly f
 
 lpg_sensor: sensor to measure LPG (C3H8) concentration
 
-touchscreen: Circuitry and code do attach ILI9488 3.5" touchscreen to Arduino and run a define a graphical user interface
+touchscreen: circuitry and code do attach ILI9488 3.5" touchscreen to Arduino and define and run a graphical user interface
