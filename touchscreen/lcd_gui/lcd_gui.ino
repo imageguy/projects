@@ -65,7 +65,7 @@
 
 #include "gui_obj.h"
 
-#define EEPROM_SIGNATURE 5 // to indicate if the EEPROM was loaded
+#define EEPROM_SIGNATURE 8 // to indicate if the EEPROM was loaded
 
 // set the LCD dimensions for centering
 // for the constants that go into PROGMEM
@@ -81,7 +81,7 @@
 // instantiate the lcd and touchscreen, having them as globals saves space
 // and makes code simpler. Note that "lcd" and "tscreen" are declared as
 // extern in gui_obj.h and used in class functions, so changing names here
-// requires propagating changes in gui_obj.cpp.
+// requires propagating changes to gui_obj.cpp.
 LCDWIKI_SPI lcd(MODEL,CS,CD,RST,LED) ;
 LCDWIKI_TOUCH tscreen(TCS,TCLK,TDOUT,TDIN,TIRQ) ;
 
@@ -93,7 +93,7 @@ unsigned long lastctr ;
 #if 0
 //===== templates for each class: this section isn't compiled =====
 
-// gui_obj
+// template for gui_obj objects
 // replace <var> with variable name
 const char PROGMEM label_<var>[] = "<label>" ;
 const struct gui_obj_prog PROGMEM buff_<var> =
@@ -110,11 +110,14 @@ const struct gui_obj_prog PROGMEM buff_<var> =
 
 gui_obj <var>( &buff_<var> ) ;
 
-// clickable
+// template for clickable objects
 // replace <var> with variable name
 const char PROGMEM label_<var>[] = "<label>" ;
-const char PROGMEM vartxt_<var>[] = "<vartxt>" ;
-const char PROGMEM vartxt2_<var>[] = "<vartxt_clickable>" ;
+// If vartxt is not PROGMEM, VARTXT_MEM must be OR'd into flag
+char vartxt_<var>[] = "<vartxt>" ; // variable vartxt
+// or
+const char PROGMEM vartxt_<var>[] = "<vartxt>" ; // fixed vartxt
+const char PROGMEM vartxt2_<var>[] = "<vartxt2>" ;
 const struct clickable_prog PROGMEM buff_<var> =
 {
 	_x, _y, _w, _h, // uint16_t
@@ -124,7 +127,7 @@ const struct clickable_prog PROGMEM buff_<var> =
 	// if any of the strings are missing, set to NULL
 	// must be cast to (__FlashStringHelper *)
 	(__FlashStringHelper *) label_<var>,
-	(__FlashStringHelper *) vartxt_<var>,
+	(void *) vartxt_<var>,
 	(__FlashStringHelper *) vartxt2_<var>,
 	vartxt_offset, // uint8_t
 	fg_color_clicked,  // uint16_t
@@ -134,9 +137,10 @@ const struct clickable_prog PROGMEM buff_<var> =
 
 clickable <var>( &buff_<var>, flags ) ;
 
-// editval
+// template for editval objects
 // replace <var> with variable name
 const char PROGMEM label_<var>[] = "<label>" ;
+char vartxt_<var>[] = "<vartxt>" ; // always variable vartxt
 const struct editval_prog PROGMEM buff_<var> =
 {
 	_x, _y, _w, _h, // uint16_t
@@ -146,7 +150,8 @@ const struct editval_prog PROGMEM buff_<var> =
 	// if any of the strings are missing, set to NULL
 	// must be cast to (__FlashStringHelper *)
 	(__FlashStringHelper *) label_<var>,
-	(__FlashStringHelper *) NULL, // vartxts not used
+	char vartxt_target[] = "              " ;
+	(void *) vartxt_<var>,
 	(__FlashStringHelper *) NULL,
 	vartxt_offset, // uint8_t
 	fg_color_clicked,  // uint16_t
@@ -159,16 +164,16 @@ const struct editval_prog PROGMEM buff_<var> =
 	eeprom_address // uint16_t
 } ;
 
-editval <var>( &buff_<var> ) ;
+editval <var>( &buff_<var> ) ; // editval constructor sets flags internally
 
 //================== end template section ===============
 #endif
+
 // OK and CANCEL declared first, so they are available to other objects
 const char PROGMEM label_ok_button[] = "OK" ;
 const struct clickable_prog PROGMEM buff_ok_button =
 {
 	10, C_LCD_H-50, (C_LCD_W-40)/2, 40, // uint16_t
-	//40, C_LCD_H-50, STR_PIXW(3,3), 40, // uint16_t
 	BLUE, YELLOW, // uint16_t
 	false,   // bool
 	3, // uint8_t
@@ -186,7 +191,6 @@ clickable ok_button( &buff_ok_button, 0x0 ) ;
 const char PROGMEM label_cancel_button[] = "CANCEL" ;
 const struct clickable_prog PROGMEM buff_cancel_button =
 {
-	//160, C_LCD_H-50, STR_PIXW(7,3), 40, // uint16_t
 	25+(C_LCD_W-40)/2, C_LCD_H-50, (C_LCD_W-40)/2, 40, // uint16_t
 	BLUE, YELLOW, // uint16_t
 	false,   // bool
@@ -244,8 +248,6 @@ const struct clickable_prog PROGMEM buff_sstop_button =
 } ;
 
 clickable sstop_button( &buff_sstop_button, AM_ONOFF ) ;
-//clickable sstop_button( &buff_sstop_button, AM_ONOFF|VARTXT_MEM ) ;
-
 
 // ctr display uses VARTXT_MEM
 const char PROGMEM label_ctr[] = "CTR:   " ;
@@ -265,11 +267,12 @@ const struct clickable_prog PROGMEM buff_ctr =
 	NULL, NULL
 } ;
 clickable ctr_disp( &buff_ctr, VARTXT_MEM ) ;
+// while ctr_disp is clickable, the sketch ignores any clicks on it.
 
 // when switching between float and int, n_int and n_dec must be updated
 // labels should be expanded or shrunk reflecting the display format
-// PIXW call should als be set so that the length is fixed label + 1
-// if the targetval type is changed, increment the EEPROM signature so the
+// PIXW call should also be set so that the length is fixed label + 1
+// if the targetval type is changed, modify the EEPROM signature so the
 // new value is written into EEPROM
 float targetval = -123.45 ;
 //long targetval = 123 ;

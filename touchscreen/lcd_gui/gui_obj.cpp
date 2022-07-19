@@ -274,6 +274,7 @@ void editval::edit()
 	int n_pad_x, n_pad_y ;
 	char editbuff[15]  ;
 	char *vartxt ; // linked to in-memory vartxt
+	char *c1, *c2 ;
 	uint8_t base_h, base_char_w, selected = 255 ;
 	uint16_t base_w, lcd_w, lcd_h ;
 	char *numvals = "123456789-0 " ;
@@ -299,26 +300,19 @@ void editval::edit()
 	cancel = pgm_read_word_near( &(lpbuff->cancel) ) ;
 	_action = (int (*)( void *obj, void *aa))
 			pgm_read_word_near( &(lpbuff->_action)) ;
-	if ( n_dec == 0 ) {
-		String( *value ).toCharArray(editbuff,15) ;
-	} else {
-		String( *((float *)value), n_dec ).toCharArray(editbuff,15) ;
-	}
 	if ( !am_signed )
 		numvals[9] = ' ' ;
 	// set up for edit screen
 	n_edit = n_int + n_dec + (n_dec>0 ? 1:0) + (am_signed ? 1:0) ;
-	if ( strlen(editbuff) < n_edit ) {
-		// string is left-justified, needs to be right-justified
-		// if float, we're guaranteed the right number of decimals
-		j = n_edit - strlen(editbuff) ;
-		for ( i = n_edit-1 ; i >= 0 ; i-- )
-			if ( i-j >= 0 )
-				editbuff[i] = editbuff[i-j] ;
-			else
-				editbuff[i] = ' ' ;
-		i = strlen(editbuff) ;
-	}
+	c1 = vartxt ;
+	while ( *c1 != '\0' )
+		c1++ ;
+	c2 = editbuff + n_edit ;
+	while ( c2 >= editbuff && c1 >= vartxt )
+		*(c2--) = *(c1--) ;
+	while ( c2 >= editbuff )
+		*(c2--) = ' ' ;
+
 	lcd_w = lcd.Get_Display_Width() ;
 	lcd_h = lcd.Get_Display_Height() ;
 	if ( lcd_w < lcd_h ) {
@@ -439,8 +433,7 @@ void editval::edit()
 				}
 				i = n_pad_x+(n_clicked%n_col)*N_CELL_W ;
 				j = n_pad_y+(n_clicked/n_col)*N_CELL_H ;
-				draw_one_padval(N_CELL_BG,
-					N_CELL_FG,
+				draw_one_padval(N_CELL_BG, N_CELL_FG,
 					i, j, numvals[n_clicked] ) ;
 				n_clicked = 255 ;
 			}
@@ -453,34 +446,36 @@ void editval::edit()
 
 	if ( done_ok ) {
 		// OK pressed, parse the editbuff and update the value if it
-		// changed
+		// changed.
 		// before parsing, eliminate any spaces
-		i = 0 ;
-		j = 0 ;
-		while ( i < n_edit )
-			if ( editbuff[i]  == ' ' )
-				i++ ;
-			else
-				editbuff[j++] = editbuff[i++] ;
-		n_edit = strlen( editbuff ) - 1 ;
-		while ( n_edit >= j  )
-			editbuff[n_edit--] = '\0' ;
-		n_edit++ ;
+		// at the same time, we copy the editbuff into vartxt - if
+		// the value changed, we have to do this anyway and if not,
+		// no harm done.
+		c1 = editbuff ;
+		c2 = vartxt ;
+		n_edit = 0 ;
+		while ( *c1 != '\0' ) {
+			if ( *c1 != ' ' ) {
+				*(c2++) = *c1 ;
+				n_edit++ ;
+			}
+			c1++ ;
+
+		}
+		*c2 = '\0' ;
 		
 		done_ok = false ; // reusing to track if value changed
 		if ( n_dec == 0 ) {
 			// integer value
 			new_intval = 0 ;
-			if ( editbuff[0] == '-' ) 
-				i = 1 ;
-			else
-				i = 0 ;
-			while ( i < n_edit ) {
+			c1 = vartxt ;
+			if ( *c1 == '-' )
+				c1++ ;
+			new_intval = 0 ;
+			while ( *c1 != '\0' )
 				new_intval = 10 * new_intval +
-					((long)editbuff[i]-(long)'0');
-				i++ ;
-			}
-			if ( editbuff[0] == '-' ) 
+					((long)*(c1++)-(long)'0');
+			if ( *vartxt == '-' )
 				new_intval = -new_intval ;
 			if ( new_intval != intval ) {
 				done_ok = true ;
@@ -488,28 +483,26 @@ void editval::edit()
 			}
 		} else {
 			// float value
-			if ( editbuff[0] == '-' )
-				i = 1 ;
-			else
-				i = 0 ;
-			new_fvalue = 0 ;
-			while ( i < n_edit && editbuff[i] != '.' ) {
-				new_fvalue = 10 * new_fvalue +
-					((long)editbuff[i]-(long)'0');
-				i++ ;
+			c1 = vartxt ;
+			i = 1 ;
+			if ( *c1 == '-' ) {
+				c1++ ;
+				i = -1 ;
 			}
+			new_fvalue = 0 ;
+			while ( *c1 != '.' )
+				new_fvalue = 10 * new_fvalue +
+					((long)*(c1++)-(long)'0');
 			// we're at the decimal point
-			j = i + 1 ;
+			c1++ ; // skip the decimal point
 			new_intval = 10 ;
-			while ( j < n_edit  ) {
+			while ( *c1 != '\0' ) {
 				new_fvalue += 
-					((float)editbuff[j]-(float)'0') /
+					((float)*(c1++)-(float)'0') /
 					(float)new_intval ;
-					j++ ;
 					new_intval *= 10 ;
 			}
-			if ( editbuff[0] == '-' )
-				new_fvalue = -new_fvalue ;
+			new_fvalue *= (float)i ;
 			fvalue = (float *)value ;
 			if ( new_fvalue != *fvalue ) {
 				done_ok = true ;
@@ -518,7 +511,6 @@ void editval::edit()
 		}
 		if ( done_ok ) {
 			EEPROM.put( eeprom_addr, *value ) ;
-			strcpy( vartxt, editbuff ) ;
 			if ( _action != NULL ) 
 				_action( (void *)this, NULL ) ;
 		}

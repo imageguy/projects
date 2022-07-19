@@ -45,9 +45,10 @@
 
    To save on memory, almost all the object parameters are kept constant in
    a separate struct - each class has its own. This struct is stored in
-   PROGMEM, as are all the labels. Any changes require recompilation.
+   PROGMEM, as are most of the labels. Any changes require recompilation.
 
    By Nenad Rijavec
+
    There are no restrictions on this code, you are welcome to use, modify
    and share it as you see fit. Note that LCDWIKI libraries have their own
    usage policies.
