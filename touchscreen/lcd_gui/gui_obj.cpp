@@ -122,8 +122,12 @@ void clickable::render( boolean from_release, boolean vartxt_only )
 	__FlashStringHelper *vartxt2 = (__FlashStringHelper *)
 			pgm_read_word_near( &(lpbuff->vartxt2) ) ;
 	get_dims( &_x, &_y, &_w, &_h ) ;
-	fgcolor = READ_FG ;
-	bgcolor = READ_BG ;
+	//fgcolor = READ_FG ;
+	//bgcolor = READ_BG ;
+	fgcolor = _flags & CHG_ON ? 
+	(_flags & AM_ON ?READ_FG_CLICKED : READ_FG) : READ_FG ;
+	bgcolor = _flags & CHG_ON ? 
+	(_flags & AM_ON ?READ_BG_ON : READ_BG) : READ_BG ;
 
 
 	if ( vartxt != NULL && (_flags & VARTXT_MEM) ) {
@@ -162,7 +166,7 @@ void clickable::render( boolean from_release, boolean vartxt_only )
 		if ( vartxt != NULL ) {
 			if ( from_release && (_flags & AM_ONOFF) ) {
 				// text changed, erase the old
-				lcd.Set_Text_colour( READ_BG ) ;
+				lcd.Set_Text_colour( bgcolor) ;
 				if (_flags&AM_ON)
 					lcd.Print_String( vartxt2,
 						labelx, labely ) ;

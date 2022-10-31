@@ -142,6 +142,7 @@ extern LCDWIKI_TOUCH tscreen ;
 #define READ_FG pgm_read_word_near( &(_pbuff->fg_color ) )
 #define READ_BG pgm_read_word_near( &(_pbuff->bg_color ) )
 #define READ_FG_CLICKED pgm_read_word_near( &(((const struct clickable_prog *)_pbuff)->fg_color_clicked ) )
+#define READ_BG_ON pgm_read_word_near( &(((const struct clickable_prog *)_pbuff)->bg_color_on ) )
 #define READ_TRANSPARENT ((bool)(pgm_read_byte_near(&(_pbuff->am_transparent))))
 #define READ_FSIZE ((uint8_t)(pgm_read_byte_near( &(_pbuff->font_size))))
 #define READ_VOFF pgm_read_word_near( &(((const struct clickable_prog *)_pbuff)->vartxt_offset ) )
@@ -150,6 +151,7 @@ extern LCDWIKI_TOUCH tscreen ;
 // clickable _flags bit values
 #define AM_ONOFF   0x80  // object is on-off flavor
 #define AM_ON      0x40  // object is on
+#define CHG_ON     0x20  // object is on-off and change fg and bg when on
 #define VARTXT_MEM 0x02  // vartxt string is stored in memory, not in PROGMEM
 #define AM_CLICKED 0x01  // active click in progress
 
@@ -174,9 +176,10 @@ struct clickable_prog {
 		void *vartxt  ;  // may be either in progmem or memory
 		__FlashStringHelper *vartxt2  ;
 		uint8_t vartxt_offset ;
-		uint16_t fg_color_clicked ;
+		uint16_t fg_color_clicked ; // if CHG_ON set, used when on
 		int (*_action)( void *obj, void *aa) ;
 		void *_act_arg ;
+		uint16_t bg_color_on ;
 } ;
 
 struct editval_prog {
@@ -229,6 +232,7 @@ class clickable : public gui_obj {
 		     bit 0 - if 1, object is on-off flavor
 		     bit 1 - if bit 0 is 1, bit 1 indicates whether the
 		         object is on or off.
+		     bit 2 - if 1 and the object is on-off, change color when on
 		     bit 6 - if 1, vartxt is in memory, otherwise in PROGMEM
 		     bit 7 - if 1, the object is currently being clicked.
 		     other bits unused
@@ -264,6 +268,11 @@ class clickable : public gui_obj {
 			else
 				return true ;
 		}
+		virtual void *get_act_arg()
+		{
+			return (void *)pgm_read_word_near(
+                	&(((const struct clickable_prog *)_pbuff)->_act_arg)) ;
+		}
 	protected:
 } ;
 
@@ -278,5 +287,9 @@ class editval : public clickable {
 		virtual void release_action() ;
 		virtual void edit( ) ;
 		virtual void set_val_display() ;
+		virtual void *get_act_arg()
+		{
+			return (void *)0 ;
+		}
 	protected:
 } ;
