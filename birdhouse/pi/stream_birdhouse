@@ -1,0 +1,6 @@
+#! /bin/sh
+
+raspivid -t 0 -h 640 -w 480  -fps 30  -o - | \
+gst-launch-1.0 fdsrc ! queue ! h264parse ! \
+ rtph264pay ! \
+ udpsink host=<mymachine>.local port=5000

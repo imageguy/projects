@@ -1,0 +1,11 @@
+#! /bin/sh
+
+if [ $# = 1 ]
+then
+	outjpeg=$1
+else
+	outjpeg=`date +%Y-%m-%d_%H-%M-%S`.jpg
+fi
+
+echo making $outjpeg
+raspistill -t 1 -e jpg -o $outjpeg

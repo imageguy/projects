@@ -1,0 +1,7 @@
+gst-launch-1.0 udpsrc address=<mymachine>.local port=5000 \
+	caps=application/x-rtp ! \
+	rtph264depay ! \
+	h264parse ! \
+	queue ! \
+	avdec_h264 ! \
+	autovideosink

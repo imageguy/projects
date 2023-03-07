@@ -1,0 +1,2 @@
+# source this
+sudo mount -t cifs //<mymachine>.local/<exportdir> <mountdir> -o user=<myid>,uid=$(id -u),gid=$(id -g)
