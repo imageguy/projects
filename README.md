@@ -7,3 +7,5 @@ lpg_sensor: sensor to measure LPG (C3H8) concentration
 touchscreen: circuitry and code do attach ILI9488 3.5" touchscreen to Arduino and define and run a graphical user interface
 
 dust: shop dust collection system with motorized gates and touchscreen control
+
+birdhouse: lighted camera added to a bluebird nesting box, controlled by a Raspberry Pi.
