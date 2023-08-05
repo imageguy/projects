@@ -2,6 +2,8 @@
 
 Files for various projects that need to be publicly accessible. This is mostly for published Instructables, since a number of file types can't be uploaded to an Instructables. Each project is a directory.
 
+bandsaw: Ryobi cordless bandsaw stand and accessories
+
 birdhouse: lighted camera added to a bluebird nesting box, controlled by a Raspberry Pi.
 
 dust: shop dust collection system with motorized gates and touchscreen control
